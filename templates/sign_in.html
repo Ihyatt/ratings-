@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %} Sign In {% endblock %}
+{% block content %}
+
+<h1>Sign In</h1><br>
+    <form action="/user-repeat-check" method="POST">
+        Enter Email: <input type="text" name="email" method="POST">
+        Enter Password: <input type="text" name="password" method="POST"><br>
+    <input type="submit">
+    </form>
+    
+  
+
+
+
+{% endblock %}
