@@ -84,12 +84,7 @@ def log_in_check():
 
     return render_template("homepage.html")
 
-@app.route("/user-list")
-def details():
-    """Take User to details page."""
 
-        
-    return render_template("user_list.html")
 
 @app.route("/log-out")
 def log_out():
@@ -102,17 +97,71 @@ def log_out():
         
 
 
-
 @app.route("/users/<int:user_id>")
 def details(user_id):
     """Take User to details page."""
 
-    user_check = User.query.filter(user_id == user_id).first()
+    user = User.query.get(user_id) #returns an object: such as row of user info 
 
-    rating_check = Rating.query.filter(user_id == user_id).all()
+    ratings = user.ratings
 
-    return render_template("user_details.html", user_check=user_check, rating_check=rating_check)
-        
+
+
+    return render_template("user_details.html", user=user, ratings=ratings)
+
+
+@app.route("/movie-list")
+def movie_list():
+    """Take user to a listing of all movies """
+
+    movies = Movie.query.order_by(Movie.title).all()
+    return render_template("movie_list.html", movies=movies)
+
+
+@app.route("/movie-details/<int:movie_id>", methods=["GET"])
+def movie_details(movie_id):
+    """Take user to a profile of a movie."""
+    movie = Movie.query.get(movie_id)
+    user_id = session.get("user_id")
+
+    
+    if user_id:
+        user_rating = Rating.query.filter_by(
+            movie_id=movie_id, user_id=user_id).first()
+
+    else:
+        user_rating = None
+
+    return render_template("movie_details.html",
+                           movie=movie,
+                           user_rating=user_rating)
+
+
+
+@app.route("/movie-details/<int:movie_id>", methods = ['POST'])
+def submit_rating(movie_id):
+    """Submit user rating"""
+    
+    score = int(request.form["score"])
+
+    user_id = session.get("user_id")
+    if not user_id:
+        raise Exception("No user logged in.")
+
+    rating = Rating.query.filter_by(user_id=user_id, movie_id=movie_id).first()
+
+    if rating:
+        rating.score = score
+        flash("Rating updated.")
+
+    else:
+        rating = Rating(user_id=user_id, movie_id=movie_id, score=score)
+        flash("Rating added.")
+        db.session.add(rating)
+
+    db.session.commit()
+
+    return redirect("/movie-details/%s" % movie_id)
 
 
 if __name__ == "__main__":
